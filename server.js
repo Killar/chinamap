@@ -52,7 +52,6 @@ initDataFile();
 //   console.log(`Server running on http://localhost:${PORT}`);
 // });
 
-// 必须监听0.0.0.0，否则Vercel无法访问
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Server running on port ${port}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
