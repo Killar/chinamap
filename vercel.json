@@ -1,12 +1,27 @@
+// {
+//   "functions": {
+//     "api/visited.js": {
+//       "runtime": "@vercel/node@3"
+//     }
+//   },
+//   "routes": [
+//     { "src": "/api/visited", "dest": "/api/visited.js" },
+//     { "src": "/(.*)", "dest": "/$1" }
+//   ],
+//   "buildCommand": "echo 'Build completed'"
+// }
 {
-  "functions": {
-    "api/visited.js": {
-      "runtime": "@vercel/node@3"
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node@3"
     }
-  },
-  "routes": [
-    { "src": "/api/visited", "dest": "/api/visited.js" },
-    { "src": "/(.*)", "dest": "/$1" }
   ],
-  "buildCommand": "echo 'Build completed'"
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "server.js"
+    }
+  ]
 }
