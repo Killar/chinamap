@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>中国旅行打卡地图</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts/map/js/china.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">中国旅行打卡地图</h1>
+      <div class="stats">
+        <div class="stat-item">
+          <span class="stat-value" id="visited-count">0</span>
+          <span class="stat-label">已打卡</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value" id="total-count">0</span>
+          <span class="stat-label">总景点</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value" id="progress-percent">0%</span>
+          <span class="stat-label">完成度</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="map-container">
+        <div id="map" class="map"></div>
+        <div class="legend">
+          <div class="legend-item">
+            <span class="legend-dot visited"></span>
+            <span>已打卡</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot unvisited"></span>
+            <span>未打卡</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-block unvisited"></span>
+            <span>未打卡省</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-block partial"></span>
+            <span>部分打卡</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-block completed"></span>
+            <span>全部打卡</span>
+          </div>
+        </div>
+      </div>
+
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="search-container">
+            <input type="text" id="search-input" placeholder="搜索景点..." class="search-input">
+            <button id="search-clear" class="search-clear" style="display: none;">×</button>
+          </div>
+          <span class="filter-toggle" id="filter-toggle">显示全部</span>
+        </div>
+        <div class="scroll-container">
+          <ul class="spot-list" id="spot-list"></ul>
+        </div>
+      </aside>
+    </main>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
