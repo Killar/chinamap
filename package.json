@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "vercel dev",
+    "build": "echo 'Build completed'",
+    "deploy": "vercel deploy --prod"
   },
   "dependencies": {
     "@vercel/kv": "^2.0.0",

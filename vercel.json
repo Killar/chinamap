@@ -1,15 +1,12 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "server.js",
-      "use": "@vercel/node"
+  "functions": {
+    "api/visited.js": {
+      "runtime": "@vercel/node@3"
     }
-  ],
+  },
   "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "server.js"
-    }
-  ]
+    { "src": "/api/visited", "dest": "/api/visited.js" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ],
+  "buildCommand": "echo 'Build completed'"
 }
