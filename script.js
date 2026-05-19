@@ -402,40 +402,28 @@ for (const [short, full] of Object.entries(provinceMap)) {
   reverseProvinceMap[full] = short;
 }
 
-async function loadVisitedSpots() {
+function loadVisitedSpots() {
   try {
-    const response = await fetch('/api/visited');
-    if (response.ok) {
-      const visitedNames = await response.json();
+    const visitedData = localStorage.getItem('visitedSpots');
+    if (visitedData) {
+      const visitedNames = JSON.parse(visitedData);
       spots.forEach(spot => {
         spot.visited = visitedNames.includes(spot.name);
       });
       console.log('打卡数据加载成功，已打卡景点:', visitedNames.length, '个');
     } else {
-      console.log('服务器不可用，使用默认状态');
+      console.log('没有找到保存的打卡数据，使用默认状态');
     }
   } catch (e) {
     console.error('加载打卡数据失败:', e);
-    console.log('使用默认状态');
   }
 }
 
-async function saveVisitedSpots() {
+function saveVisitedSpots() {
   try {
     const visitedNames = spots.filter(s => s.visited).map(s => s.name);
-    const response = await fetch('/api/visited', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ visitedSpots: visitedNames })
-    });
-    if (response.ok) {
-      const result = await response.json();
-      console.log('打卡数据保存成功，已打卡景点:', result.count, '个');
-    } else {
-      console.error('保存打卡数据失败');
-    }
+    localStorage.setItem('visitedSpots', JSON.stringify(visitedNames));
+    console.log('打卡数据保存成功，已打卡景点:', visitedNames.length, '个');
   } catch (e) {
     console.error('保存打卡数据失败:', e);
   }
@@ -798,8 +786,8 @@ function initFilterToggle() {
   });
 }
 
-async function init() {
-  await loadVisitedSpots();
+function init() {
+  loadVisitedSpots();
   updateStats();
   initMap();
   updateSpotList();
