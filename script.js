@@ -429,6 +429,255 @@ function saveVisitedSpots() {
   }
 }
 
+function loadNotes() {
+  try {
+    const notesData = localStorage.getItem('spotNotes');
+    if (notesData) {
+      return JSON.parse(notesData);
+    }
+  } catch (e) {
+    console.error('加载笔记数据失败:', e);
+  }
+  return {};
+}
+
+function saveNotes(notes) {
+  try {
+    localStorage.setItem('spotNotes', JSON.stringify(notes));
+    console.log('笔记数据保存成功');
+  } catch (e) {
+    console.error('保存笔记数据失败:', e);
+  }
+}
+
+function getNote(spotName) {
+  const notes = loadNotes();
+  return notes[spotName] || { content: '', photos: [], date: '' };
+}
+
+function setNote(spotName, note) {
+  const notes = loadNotes();
+  notes[spotName] = {
+    content: note.content || '',
+    photos: note.photos || [],
+    date: note.date || new Date().toISOString()
+  };
+  saveNotes(notes);
+}
+
+let currentNoteSpot = null;
+let currentPhotos = [];
+
+function openNoteModal(spotName) {
+  currentNoteSpot = spotName;
+  const note = getNote(spotName);
+  
+  document.getElementById('note-spot-name').textContent = spotName;
+  document.getElementById('note-content').value = note.content;
+  currentPhotos = note.photos || [];
+  updatePhotosPreview();
+  
+  document.getElementById('note-modal').style.display = 'block';
+}
+
+function closeNoteModal() {
+  document.getElementById('note-modal').style.display = 'none';
+  currentNoteSpot = null;
+  currentPhotos = [];
+}
+
+function updatePhotosPreview() {
+  const preview = document.getElementById('photos-preview');
+  preview.innerHTML = '';
+  
+  currentPhotos.forEach((photo, index) => {
+    const div = document.createElement('div');
+    div.className = 'photo-item';
+    div.innerHTML = `
+      <img src="${photo}" alt="照片" onclick="openImagePreview('${photo.replace(/'/g, "\\'")}')">
+      <button class="remove-photo" onclick="event.stopPropagation(); removePhoto(${index})">×</button>
+    `;
+    preview.appendChild(div);
+  });
+}
+
+// 图片预览功能
+let previewImages = [];
+let currentImageIndex = 0;
+let zoomLevel = 1;
+let panX = 0;
+let panY = 0;
+let isDragging = false;
+let dragStartX = 0;
+let dragStartY = 0;
+
+function openImagePreview(imageSrc) {
+  previewImages = [...currentPhotos];
+  currentImageIndex = previewImages.indexOf(imageSrc);
+  if (currentImageIndex < 0) currentImageIndex = 0;
+  
+  resetZoom();
+  showCurrentImage();
+  
+  const modal = document.getElementById('image-preview-modal');
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function showCurrentImage() {
+  if (previewImages.length === 0) return;
+  
+  const previewImage = document.getElementById('preview-image');
+  previewImage.src = previewImages[currentImageIndex];
+  
+  updateImageCounter();
+  updateNavButtons();
+}
+
+function updateImageCounter() {
+  const counter = document.getElementById('image-counter');
+  counter.textContent = `${currentImageIndex + 1} / ${previewImages.length}`;
+}
+
+function updateNavButtons() {
+  const prevBtn = document.querySelector('.image-preview-nav.prev');
+  const nextBtn = document.querySelector('.image-preview-nav.next');
+  
+  if (previewImages.length <= 1) {
+    prevBtn.style.display = 'none';
+    nextBtn.style.display = 'none';
+  } else {
+    prevBtn.style.display = 'flex';
+    nextBtn.style.display = 'flex';
+  }
+}
+
+function prevImage() {
+  if (previewImages.length <= 1) return;
+  currentImageIndex = (currentImageIndex - 1 + previewImages.length) % previewImages.length;
+  resetZoom();
+  showCurrentImage();
+}
+
+function nextImage() {
+  if (previewImages.length <= 1) return;
+  currentImageIndex = (currentImageIndex + 1) % previewImages.length;
+  resetZoom();
+  showCurrentImage();
+}
+
+function resetZoom() {
+  zoomLevel = 1;
+  panX = 0;
+  panY = 0;
+  applyTransform();
+}
+
+function applyTransform() {
+  const previewImage = document.getElementById('preview-image');
+  previewImage.style.transform = `scale(${zoomLevel}) translate(${panX}px, ${panY}px)`;
+}
+
+function closeImagePreview() {
+  const modal = document.getElementById('image-preview-modal');
+  modal.classList.remove('show');
+  document.body.style.overflow = '';
+  resetZoom();
+}
+
+// 滚轮缩放
+document.getElementById('image-preview-modal')?.addEventListener('wheel', function(e) {
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? -0.1 : 0.1;
+  zoomLevel = Math.min(Math.max(0.5, zoomLevel + delta), 5);
+  applyTransform();
+});
+
+// 拖拽移动
+const previewImage = document.getElementById('preview-image');
+
+previewImage?.addEventListener('mousedown', function(e) {
+  if (zoomLevel > 1) {
+    isDragging = true;
+    dragStartX = e.clientX - panX * zoomLevel;
+    dragStartY = e.clientY - panY * zoomLevel;
+    previewImage.classList.add('dragging');
+  }
+});
+
+document.addEventListener('mousemove', function(e) {
+  if (isDragging) {
+    panX = (e.clientX - dragStartX) / zoomLevel;
+    panY = (e.clientY - dragStartY) / zoomLevel;
+    applyTransform();
+  }
+});
+
+document.addEventListener('mouseup', function() {
+  isDragging = false;
+  previewImage?.classList.remove('dragging');
+});
+
+// 点击预览模态框背景关闭
+document.getElementById('image-preview-modal')?.addEventListener('click', function(e) {
+  if (e.target === this || e.target.classList.contains('image-preview-container')) {
+    closeImagePreview();
+  }
+});
+
+// ESC键关闭预览，左右箭头切换图片
+document.addEventListener('keydown', function(e) {
+  const modal = document.getElementById('image-preview-modal');
+  if (!modal.classList.contains('show')) return;
+  
+  if (e.key === 'Escape') {
+    closeImagePreview();
+  } else if (e.key === 'ArrowLeft') {
+    prevImage();
+  } else if (e.key === 'ArrowRight') {
+    nextImage();
+  }
+});
+
+function removePhoto(index) {
+  currentPhotos.splice(index, 1);
+  updatePhotosPreview();
+}
+
+function saveNote() {
+  if (!currentNoteSpot) return;
+  
+  const content = document.getElementById('note-content').value;
+  
+  setNote(currentNoteSpot, {
+    content: content,
+    photos: currentPhotos,
+    date: new Date().toISOString()
+  });
+  
+  closeNoteModal();
+  updateSpotList();
+}
+
+window.addEventListener('click', function(e) {
+  const modal = document.getElementById('note-modal');
+  if (e.target === modal) {
+    closeNoteModal();
+  }
+});
+
+document.getElementById('photo-upload')?.addEventListener('change', function(e) {
+  const files = e.target.files;
+  for (let i = 0; i < files.length; i++) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      currentPhotos.push(event.target.result);
+      updatePhotosPreview();
+    };
+    reader.readAsDataURL(files[i]);
+  }
+});
+
 function updateStats() {
   const visitedCount = spots.filter(s => s.visited).length;
   const totalCount = spots.length;
@@ -714,6 +963,7 @@ function updateSpotList() {
             <li class="spot-item ${spot.visited ? 'visited' : ''}" data-name="${spot.name}">
               <span class="spot-dot"></span>
               <span class="spot-name">${spot.name}</span>
+              <span class="note-icon" onclick="event.stopPropagation(); openNoteModal('${spot.name}')">📝</span>
             </li>
           `).join('')}
         </ul>
@@ -721,8 +971,10 @@ function updateSpotList() {
     `;
   }).join('');
 
-  if (scrollContainer) {
-    scrollContainer.scrollTop = scrollTop;
+  if (scrollContainer && scrollTop > 0) {
+    requestAnimationFrame(() => {
+      scrollContainer.scrollTop = scrollTop;
+    });
   }
 }
 
